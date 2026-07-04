@@ -1,6 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
-from src.gemini_service import GeminiService
+from src.gemini_service import GeminiService, get_user_friendly_error
 from src.ui_components import (
     inject_custom_css,
     render_header,
@@ -47,10 +47,8 @@ if st.button("Generate Plan", type="primary"):
                 # Store in session state to persist when user checks grocery list items
                 st.session_state["meal_plan"] = data
                 st.success("Plan Generated!")
-        except ValueError as ve:
-            st.error(str(ve))
         except Exception as e:
-            st.error(f"An error occurred while generating your plan: {str(e)}")
+            st.error(get_user_friendly_error(e))
 
 # Display the Meal Plan if it is available in the session state
 if st.session_state["meal_plan"] is not None:

@@ -65,3 +65,38 @@ class GeminiService:
         except Exception as e:
             # Propagate exception to be handled gracefully by UI layer
             raise e
+
+def get_user_friendly_error(e: Exception) -> str:
+    """
+    Translates technical exceptions into polite, user-friendly messages.
+    """
+    if isinstance(e, ValueError):
+        # User-friendly value error from validation
+        return str(e)
+        
+    if isinstance(e, APIError):
+        code = getattr(e, "code", None)
+        message = getattr(e, "message", str(e))
+        msg_lower = message.lower()
+        
+        if code == 400 or "api key not valid" in msg_lower or "api_key" in msg_lower:
+            return "🔑 The Gemini API key configured is invalid or has expired. Please check your configuration."
+        elif code == 403 or "permission denied" in msg_lower:
+            return "🚫 Access denied. Your API key does not have permission to use the Gemini API."
+        elif code == 429 or "quota exceeded" in msg_lower or "rate limit" in msg_lower:
+            return "⏳ Rate limit exceeded or API quota exhausted. Please wait a moment before trying again."
+        elif code == 503 or "service unavailable" in msg_lower:
+            return "🛠️ The Gemini service is currently overloaded or undergoing maintenance. Please try again shortly."
+        else:
+            return "🤖 The AI service returned an error. Please verify your inputs and try again."
+            
+    # Check for network/connection errors
+    err_str = str(e).lower()
+    if "connect" in err_str or "timeout" in err_str or "dns" in err_str or "resolution" in err_str:
+        return "🌐 Connection error. Please check your internet connection and try again."
+        
+    if "json" in err_str or "decode" in err_str:
+        return "🧩 The AI returned an invalid response structure. Please try clicking 'Generate Plan' again."
+        
+    return "⚠️ An unexpected error occurred while generating your plan. Please check your inputs and try again."
+
